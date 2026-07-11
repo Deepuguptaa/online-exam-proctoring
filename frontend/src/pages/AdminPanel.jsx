@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import AIQuestionGenerator from '../components/AIQuestionGenerator';
 
 function AdminPanel() {
   const [exams, setExams] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
-  const [selectedExamId, setSelectedExamId] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user'));
+  const token = localStorage.getItem('token');
 
   const [examForm, setExamForm] = useState({
     title: '', description: '', duration: '', totalMarks: '', passingMarks: ''
-  });
-
-  const [questionForm, setQuestionForm] = useState({
-    questionText: '', options: ['', '', '', ''], correctAnswer: 0, marks: 1
   });
 
   useEffect(() => {
@@ -39,26 +36,12 @@ function AdminPanel() {
     setLoading(true);
     try {
       await api.post('/exams', examForm);
-      setMessage('Exam created successfully!');
+      setMessage('✅ Exam created successfully!');
       setShowCreateForm(false);
       setExamForm({ title: '', description: '', duration: '', totalMarks: '', passingMarks: '' });
       fetchExams();
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error creating exam');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddQuestion = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await api.post(`/exams/${selectedExamId}/questions`, questionForm);
-      setMessage('Question added successfully!');
-      setQuestionForm({ questionText: '', options: ['', '', '', ''], correctAnswer: 0, marks: 1 });
-    } catch (err) {
-      setMessage(err.response?.data?.message || 'Error adding question');
     } finally {
       setLoading(false);
     }
@@ -105,9 +88,9 @@ function AdminPanel() {
           </button>
           <button
             onClick={() => { setShowQuestionForm(!showQuestionForm); setShowCreateForm(false); }}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700"
+            className={`px-6 py-2 rounded-lg font-semibold text-white ${showQuestionForm ? 'bg-purple-700' : 'bg-purple-600 hover:bg-purple-700'}`}
           >
-            + Add Question
+            ✍️ / 🤖 Add Question
           </button>
         </div>
 
@@ -168,72 +151,17 @@ function AdminPanel() {
           </div>
         )}
 
-        {/* Add Question Form */}
+        {/* AI + Manual Question Form */}
         {showQuestionForm && (
-          <div className="bg-white p-6 rounded-xl shadow mb-6">
-            <h2 className="text-lg font-bold mb-4">Add Question to Exam</h2>
-            <form onSubmit={handleAddQuestion} className="space-y-4">
-              <select
-                value={selectedExamId}
-                onChange={(e) => setSelectedExamId(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Exam</option>
-                {exams.map(exam => (
-                  <option key={exam._id} value={exam._id}>{exam.title}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Question Text"
-                value={questionForm.questionText}
-                onChange={(e) => setQuestionForm({ ...questionForm, questionText: e.target.value })}
-                required
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {questionForm.options.map((opt, idx) => (
-                <input
-                  key={idx}
-                  type="text"
-                  placeholder={`Option ${idx + 1}`}
-                  value={opt}
-                  onChange={(e) => {
-                    const newOptions = [...questionForm.options];
-                    newOptions[idx] = e.target.value;
-                    setQuestionForm({ ...questionForm, options: newOptions });
-                  }}
-                  required
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              ))}
-              <div className="grid grid-cols-2 gap-4">
-                <select
-                  value={questionForm.correctAnswer}
-                  onChange={(e) => setQuestionForm({ ...questionForm, correctAnswer: parseInt(e.target.value) })}
-                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={0}>Correct Answer: Option 1</option>
-                  <option value={1}>Correct Answer: Option 2</option>
-                  <option value={2}>Correct Answer: Option 3</option>
-                  <option value={3}>Correct Answer: Option 4</option>
-                </select>
-                <input
-                  type="number"
-                  placeholder="Marks"
-                  value={questionForm.marks}
-                  onChange={(e) => setQuestionForm({ ...questionForm, marks: parseInt(e.target.value) })}
-                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
-              >
-                {loading ? 'Adding...' : 'Add Question'}
-              </button>
-            </form>
+          <div className="bg-white rounded-xl shadow mb-6">
+            <AIQuestionGenerator
+              exams={exams}
+              token={token}
+              onQuestionAdded={() => {
+                setMessage('✅ Questions successfully add ho gaye!');
+                fetchExams();
+              }}
+            />
           </div>
         )}
 

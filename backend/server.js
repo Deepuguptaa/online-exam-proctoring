@@ -14,6 +14,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/exams', require('./routes/exam'));
 app.use('/api/proctor', require('./routes/proctor'));
+app.use('/api/ai', require('./routes/ai'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Online Exam API is running!' });
