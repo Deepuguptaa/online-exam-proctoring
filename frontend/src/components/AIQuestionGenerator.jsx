@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://online-exam-proctoring-4jp0.onrender.com/api";
 
 export default function AIQuestionGenerator({ exams, token, onQuestionAdded }) {
   const [mode, setMode] = useState(null);
